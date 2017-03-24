@@ -1,0 +1,96 @@
+Iterator
+是iterable类型的对象，含有next（python2）或者__next__(python3)方法和
+__iter__方法的一个特殊对象，可以使用for loop循环访问。
+实现next方法，当没有下一个元素的时候必须抛出StopIteration异常。
+当遍历一个迭代器的时候，它会修改内部状态，导致你只能向前获取下一个元素，不能通过迭代器访问后面一个元素；
+*****检查一个对象是不是iterable对象一般是通过catch异常的方式去检查，虽然这个方式有点挫；
+另外一种是检查是否是容器类中的Itreaable对象if isinstance(e, collections.Iterable)
+Examples:
+class Iterator:
+    def __init__(self, start, end):
+        self.current = start
+        self.end = end
+    def __iter__(self):
+        return self
+    def next(self):
+        if self.current < self.end:
+            self.index = self.current
+            self.current += 1
+            return self.index
+        else:
+            raise StopIteration
+
+it = Iterator(5, 8)
+for i in it:
+    print i
+
+
+可迭代对象
+Examples:
+class ZRange:
+    def __init__(self, n):
+        self.n = n
+    def __iter__(self):
+        return Iterator(0, self.n)
+
+class Iterator:
+    def __init__(self, start, end):
+        self.current = start
+        self.end = end
+    def __iter__(self):
+        return self
+    def next(self):
+        if self.current < self.end:
+            self.index = self.current
+            self.current += 1
+            return self.index
+        else:
+            raise StopIteration
+
+zr = ZRange(10)
+import collections
+print isinstance(zr, collections.Iterable)
+print zr is iter(zr)
+print [i for i in zr]
+print [i for i in zr]
+
+list也是一种可迭代对象
+
+Generator
+对于一个生成器他一定是一个迭代器，但一个迭代器却不一定是生成器。
+定义迭代器有两种方式
+1）使用yield关键字，对于一个方法在方法体里加上yield关键字就变成了生成器。yield作用就是返回一个生成器，它会保存当前函数
+状态，记录下一次函数调用next的时候运行状态。当函数没有下一次运行状态的时候，再继续调用next方法，这个时候StopIteration
+异常就被抛出。
+2）生成表达式（）
+my_generator = (x for x in range(10))
+def Generator(my_list):
+    n = 0
+    size = len(my_list)
+    while n < size:
+        yield
+        n += 1
+ge = Generator([1, 2, 3, 4])
+for g in ge:
+    print 'generator:' + str(g)
+
+因为生成器是一个迭代器，所以迭代器具有的特性，生成器肯定会有的。比如只能向前遍历等。当然除了迭代器特性外，生成器还有自己的方法，比如send方法等。通过send可以定义当前生成器的值。
+
+
+递归生成器
+生成器可以和函数一样进行递归
+
+生成器的send和close方法
+从上面了解到，next方法可以恢复生成器状态并继续执行，send是除next方法外另外一个恢复生成器的方法。
+调用send必须传入非None值的，生成器必须处于挂起状态，否则将抛出异常。也就是第一次调用，要使用next()语句或send(None),因为没有yield语句接收这个值。
+close
+这个方法用于关闭生成器，对关闭的生成器再次调用next或send将抛出StopIteration异常。
+
+Summary
+1）通过实现迭代器协议对应的__iter__()和next()方法，可以自定义迭代器类型。对于可迭代对象，for语句可以通过iter()方法获取迭代器，并且通过
+next或者容器的下一个元素。
+2）像列表这种序列类型的对象，可迭代对象和迭代器对象是互相独立存在的，在迭代的过程中各个迭代器相互独立；但是有的可迭代对象本身又是迭代器对象，那么
+迭代器就无法独立使用。
+3）itertools模块提供了一系列迭代器，能够帮助用户轻松地使用排列、组合、笛卡尔积或其他组合结构。
+4）生成器是一种特殊的迭代器，内部支持了生成器协议，不需要明确定义__iter__()和next()方法。
+5）生成器通过生成器函数产生，生成器函数可以通过常规的def语句实现，但是不能使用return返回，而是用yield一次返回一个结果。

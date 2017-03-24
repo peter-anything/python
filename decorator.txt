@@ -1,0 +1,55 @@
+装饰器：
+作为修改函数的一种便捷方式，为程序员编写程序提供了便利性和灵活性，适当使用装饰器，能够有效的提高代码的可读性和可维护性。
+本质为一个函数，这个函数接收其它函数为参数，并将其以一个新的修改的函数进行替换。
+
+最简单的装饰器
+
+def decorator(func):
+    #为了获取函数原有的docstring和名字
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        #Do your things
+        return func(*args, **kwargs)
+    return wrapper
+
+Examples:
+import functools
+import inspect
+
+def check_is_admin(func):
+    #为了获取函数原有的docstring和名字
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        #它讲返回一个将名字和值作为键值对的字典
+        func_args = inspect.getcallargs(func, *args, **kwargs)
+        print func_args
+        if func_args.get('username') != 'admin':
+            raise Exception('The user is not allowed to get food.')
+        return func(*args, **kwargs)
+    return wrapper
+
+@check_is_admin
+def get_food(username, food = 'chocolate'):
+    return '{0} get food: {1}'.format(username, food)
+
+print get_food('admin')
+
+如何传递参数呢？
+使用场景：
+1）注入参数（提供默认参数，生成参数）
+2）记录函数行为（日志，缓存，计时器）
+3）预处理/后处理（配置上下文什么的）
+4）修改调用时的上下文（线程异步或者并行，类方法）
+缺点：
+1）Decorators were introduced in Python 2.4, so be sure your code will be run on >= 2.4.
+2）Decorators slow down the function call. Keep that in mind.
+3）You cannot un-decorate a function. (There are hacks to create decorators that can be removed, but nobody uses them.) So once a function is decorated, it’s decorated for all the code.
+4）Decorators wrap functions, which can make them hard to debug.
+
+https://wiki.python.org/moin/PythonDecoratorLibrary
+
+http://flask.pocoo.org/docs/0.10/
+
+https://github.com/lalor/Tomorrow
+
+https://github.com/chriscannon/highlander
