@@ -41,4 +41,36 @@ for event in events:
     handler.handle(event)
 
 实现2：
+基于协程实现的
+import functools
 
+def coroutine(function):
+    @functools.wraps(function)
+    def wrapper(*args, **kwargs):
+        generator = function(*args, **kwargs)
+        next(generator)
+        return generator
+    return wrapper
+
+@coroutine
+def key_handler(successor = None):
+    while True:
+        event = (yield)
+        if 0 < event <= 10:
+            print('key_handler Press: {}'.format(event))
+        elif successor is not None:
+            successor.send(event)
+
+@coroutine
+def mouse_handler(successor = None):
+    while True:
+        event = (yield)
+        if 10 < event <= 20:
+            print('mouse_handler Press: {}'.format(event))
+        elif successor is not None:
+            successor.send(event)
+
+pipeline = key_handler(mouse_handler())
+events = [2, 5, 14, 22, 18, 3, 35, 27, 20, 0]
+for event in events:
+    pipeline.send(event)
