@@ -1,6 +1,6 @@
 装饰器：
 作为修改函数的一种便捷方式，为程序员编写程序提供了便利性和灵活性，适当使用装饰器，能够有效的提高代码的可读性和可维护性。
-本质为一个函数，这个函数接收其它函数为参数，并将其以一个新的修改的函数进行替换。
+本质为一个函数，这个函数接收其它函数或者类为参数，并将其以一个新的修改的函数或类进行替换。
 
 最简单的装饰器
 
@@ -53,3 +53,112 @@ http://flask.pocoo.org/docs/0.10/
 https://github.com/lalor/Tomorrow
 
 https://github.com/chriscannon/highlander
+
+修饰器工厂，也就是一种能够制作修饰器的函数
+import sys
+if sys.version_info[:2] < (3, 2):
+    from xml.sax.saxutils import escape
+else:
+    from html import escape
+import functools
+
+def statically_typed(*types, **kwargs):
+    def decorator(function):
+        @functools.wraps(function)
+        def wrapper(*args, **kwargs):
+            if len(args) > len(types):
+                raise ValueError('Too many arguments')
+            elif len(args) < len(types):
+                raise ValueError('Too few arguments')
+
+            for i, (arg, type_) in enumerate(zip(args, types)):
+                if not isinstance(arg, type_):
+                    raise ValueError('argument {} must be of type {}'.format(i, type_.__name__))
+            result = function(*args, **kwargs)
+            result_type = kwargs.get('result_type')
+            if (result_type is not None and not isinstance(result,
+                result_type)):
+                raise ValueError('return value must be of type {}'.format(return_type.__name__))
+            return result
+        return wrapper
+    return decorator
+
+@statically_typed(str, str, return_type = str)
+def make_tagged(text, tag):
+    return '<{0}>{1}</{0}>'.format(tag, escape(text))
+
+类修饰器
+1)两个经过充分验证的属性，多个类修饰器迭加在一起。
+def ensure(name, validate, doc=None):
+    def decorator(Class):
+        private_name = '__' + name
+        def getter(self):
+            return getattr(self, private_name)
+        def setter(self, value):
+            validate(name, value)
+            setattr(self, private_name, value)
+        setattr(Class, name, property(getter, setter, doc=doc))
+        return Class
+    return decorator
+
+def is_non_empty_str(name, value):
+    if not isinstance(value, str):
+        raise ValueError('{} must be of type str'.format(name))
+    if not bool(value):
+        raise ValueError('{} may not be empty'.format(name))
+
+@ensure('title', is_non_empty_str)
+@ensure('author', is_non_empty_str)
+class Book(object):
+
+    def __init__(self, title, author):
+        self.title = title
+        self.author = author
+
+Book('java', 'java')
+2)两个经过充分验证的属性，属性定义到类里面。
+class Ensure(object):
+    def __init__(self, validate, doc=None):
+        self.validate = validate
+        self.doc = doc
+
+def do_ensure(Class):
+    def make_property(name, attribute):
+        private_name = '__' + name
+        def getter(self):
+            return getattr(self, private_name)
+        def setter(self, value):
+            attribute.validate(name, value)
+            setattr(self, private_name, value)
+        return property(getter, setter, doc=attribute.doc)
+    for name, attribute in Class.__dict__.items():
+        if isinstance(attribute, Ensure):
+            setattr(Class, name, property(name, attribute))
+            #Error: Late binding
+            # private_name = '__' + name
+            # def getter(self):
+            #     return getattr(self, private_name)
+            # def setter(self, value):
+            #     attribute.validate(name, value)
+            #     setattr(self, private_name, value)
+            # setattr(Class, name, property(getter, setter))
+    return Class
+
+def is_non_empty_str(name, value):
+    if not isinstance(value, str):
+        raise ValueError('{} must be of type str'.format(name))
+    if not bool(value):
+        raise ValueError('{} may not be empty'.format(name))
+
+@do_ensure
+class Book(object):
+    title = Ensure(is_non_empty_str)
+    author = Ensure(is_non_empty_str)
+
+    def __init__(self, title, author):
+        self.title = title
+        self.author = author
+
+print dir(Book('Java', 'Java'))
+
+3)类修饰器实现继承
