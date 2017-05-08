@@ -1,0 +1,7 @@
+multiprocessing是一个使用方法类似threading模块的进程模块，在python2.6才开始使用。允许程序员做并行开发，可以再unix和windows下运行。
+
+进程间的通信方式
+Queue、Pipe、Socket、RPC(Remote Process Callback)
+
+进程间的同步方式
+Lock、共享内容、Manager代理，还有Semaphore、Event等
