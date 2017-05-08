@@ -10,7 +10,7 @@ def func(name, process_name, mydict, myarr):
     for i in xrange(len(myarr)):
         myarr[i] = myarr[i] + 100
 
-    p_info = 'Process[%s] name %s, mydict= %s' %(process_name, name, mydict)
+    p_info = 'Process[%s] name %s, mydict: %s' %(process_name, name, mydict)
     print(p_info)
 
 def main():
